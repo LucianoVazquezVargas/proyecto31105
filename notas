@@ -1,0 +1,39 @@
+"""
+Todo lo relacionado con base de datos de aca es usando
+sqlite  !!!! Si quisiera cambiar la base de datos
+tendria que ir a settings DATABASES y cambiarla
+
+
+
+el comando:
+python manage.py startapp NombreDeApp
+Sirve para crear aplicaciones, primero se usar el 
+startproject y luego el startapp 
+
+Las acciones(codigo,clases,etc) que quiera que pueda 
+hacer la app, van en models.py 
+Luego,tengo que ir a la carpeta creada por el 
+startproject,settings.py y buscar INSTALLED_APPS y
+añadir el nombre de startapp (en este caso,AppCoder)
+Luego de añadirla a settings, puedo usar:
+python manage.py check NombreDeApp
+para que ver si la app no tiene errores de codigo
+
+Para crear cosas para migrar a una base de datos se usa:
+python manage.py makemigrations
+esto es similar a un commit
+
+Para luego migrar las cosas creadas se usa:
+python manage.py migrate
+
+
+
+
+
+
+
+
+
+
+
+"""
