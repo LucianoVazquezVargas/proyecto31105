@@ -26,11 +26,189 @@ esto es similar a un commit
 Para luego migrar las cosas creadas se usa:
 python manage.py migrate
 
+URLS:
+los urls menos el admin y uno que dirija al path de 
+los urls,van en el app en una carpeta creada llamada
+urls.py(ubicada en la app).
+Esto es para hacer que no haya tanto quilombo de urls.
+Cada que haga una app con URLS debo añadir el path a
+el urls.py del proyecto original.
+Name, tercera cosa de los urls, name="X",eso se puede
+usar para llamar al url.
+
+STATIC:
+Dentro de la app,creo una carpeta llamada static,con
+otra carpeta dentro llamada como la App.
+Dentro de esa carpeta, van todos los css,js,img,etc.
+Para cargar el static en un template de bootstrap
+uso jinja al principio del HEAD:
+{% load static %}
+En el mismo template, va a estar la ruta de acceso al
+css,js,etc. Para que Django lo reconozca, tengo que
+pasar esas rutas a Jinja, EJ con css en este caso:
+ "{% static 'AppCoder/css/styles.css' %}"
+ Para los botones,podes elegir a donde te llevan dentro
+ de href usando el name de los urls, EJ:
+ href="{% url 'profesores' %}
+
+HERENCIAS DE PLANTILLAS:
+{% extends "AppCoder/padre.html" %}
+En este caso, uso el extend para hacer que otra 
+plantilla sea hija de la plantilla "padre", o sea
+que copia toodo lo que este en la plantilla padre.
+IMPORTANTE saber que {% load static %} va siempre igual
+abajo del extends.
+Luego, puedo modificar a gusto los "block" que cree
+en la plantilla padre,copiando el Jinja del block
+y escribiendo entre el inicio y el end
+
+SUPERUSER:
+manage.py createsuperuser
+Pide datos validos:
+Nombre de usuario,algo formato mail,
+
+ADMIN:
+Esto sirve para que el dueño de la pagina o empleados
+hagan modificaciones de forma sencilla.
+
+En cuanto a lo que me importa a mi, el codigo,es asi:
+Para añadir algo al APP admin.py uso:
+from .models import *
+admin.site.register(NombreDeFuncion)
+Para que el models quede legible, recorda poner en 
+el models un __str__(self): con algo para que tome,
+por ejemplo, en el caso del models Curso:
+    def __str__(self):
+        return self.nombre+" "+str(self.comision)
+
+LEER TEMPLATE cursoFormulario!! Ahi hay ejemplos de
+como usar inputs para hacer cosas! Pero por ahora,
+copio algo de codigo aca:
+{% block contenido_que_cambia %}
+<form action="{% url 'cursoFormulario' %}" method="POST"> {% csrf_token %}
+    <p>Nombre: <input type="text" name="nombre"></p>
+    <p>Comision: <input type="number" name="comision"></p>
+</form>
+{% endblock %}
+
+Trato de pasar lo que hace ese codigo a español..
+Crea algo, que le pega al url cursoFormulario,es formato
+POST(tmb existe formato GET),tiene 2 input,uno llamado
+nombre de tipo texto y el otro llamado comision
+de tipo numeral.tmb tiene un boton tipo submit que lo 
+que hace es enviar los otros 2 datos
+a donde le diga..en este caso cursoFormulario.
+Lo de crsf-token es algo necesario de Django,que envia
+una token de seguridad junto con el formulario para
+evitar phishing.
+En cuanto al codigo de views.py, primero revisa si
+lo que recibe es formato POST, y si lo es llena los 
+datos con lo recibido, luego crea una variable tipo
+Curso con los datos que recibe y la guarda.
+En caso de que no reciba algo en formato POST
+simplemente toma la template y la muestra.
+
+Y ahora que ya hiciste un formulario de la forma
+dificil, vamos a hacerlo de la forma que se usa
+con Django:
+Creo un archivo en la App llamado forms.py.
+Dentro del archivo, pongo: from django import forms
+Creo una clase forms.Form EJ:
+class CursoForm(forms.Form):
+    nombre= forms.CharField(max_length=50)
+    comision=forms.IntegerField()
+
+En el views iria algo asi:
+def cursoFormulario(request):
+    if request.method=="POST":
+        form=CursoForm(request.POST)
+        print(form)
+        if form.is_valid():
+            informacion=form.cleaned_data#cleaned_data es un diccionario
+            print(informacion)
+            nombre=informacion["nombre"]
+            comision=informacion["comision"]
+            curso=Curso(nombre=nombre,comision=comision)
+            curso.save()
+            return render (request,"AppCoder/inicio.html")
+    else:
+        formulario=CursoForm()
+        return render (request,"AppCoder/cursoFormulario.html",{"formulario":formulario})
 
 
+Buscar algo en la base de datos:
+Pongo el model que busco,objects,y una de las 3 opciones
+(all,filter,get),seguida por lo que quiero filtrar en 
+caso de filter o get(esto que busco podria tener al 
+final un __icontains,esto buscaria por aproximacion)
+Curso.objects.filter(comision=comision) 
 
+En la plantilla "leerProfesores" añadi botones que
+sirven para borrar y editar cosas de la BD.
+Tmb hay otro boton que me lleva al formulario profesores
+Esos botones le pegan a algo de views y tienen que
+estar en urls
 
+En el views "editarProfesores" y en la plantilla
+"editarProfesores",hay un ejemplo de como llamar,
+mostrar,editar y guardar algo de la base de datos sin
+tener que usar el admin.
 
+CLASES BASADAS EN VISTAS:
+Esto es una forma mas corta de hacer codigo,pero deja
+mucha menos libertad a la hora de cambiar el 
+comportamiento del codigo.
+Puede servir para codigo mas corto o simple.
+PRIMERO, en views.py importo:
+from django.views.generic import ListView,DetailView,CreateView,UpdateView,DeleteView
+SEGUNDO: en views.py, creo una class con el nombre 
+que quiera,(ListView):model=AlgoDeModels.py,
+template_name="direccionDeTemplate". Ejemplo
+class EstudianteList(ListView):
+    model=Estudiante
+    template_name="AppCoder/estudiantes.html"
+Luego creo la template a la que le este pegando y
+dentro del for, como no esta recibiendo ningun dato
+de diccionario, pongo "for x in object_list"
+Y en urls creo el url que es diferente de los anteriores:
+ path("estudiante/list/",EstudianteList.as_view(),name="estudiante_listar"),
+Despues de todo esto,si uso el url:
+/AppCoder/estudiante/list, me muestra una lista de 
+todos los estudiantes.
+Ahora, usamos el DetailView, que sirve para ver solo 1.
+class EstudianteDetalle(DetailView):
+    model=Estudiante
+    template_name="AppCoder/estudiante_detalle.html"
+#Ya vamos entendiendo como va la cosa? Porque yo no
+El resto de este comando esta en la plantilla
+estudiante_detalle y en urls... por alguna razon
+recibe un tipo de ID denominado <pk>(creo que pk significa id tmb)
+Con esto, si voy al url:
+/AppCoder/estudiante/Y (Y=id)
+Me muestra los datos del estudiante con ese ID
+
+CreateView.... Este viene con algo nuevo
+importamos al views.py esto:
+from django.urls import reverse_lazy
+class EstudianteCreacion(CreateView):
+    model=Estudiante
+    success_url= reverse_lazy("estudiante_listar")
+    fields=["nombre","apellido","email"]
+los otros datos estan en el template estudiante_form
+y en urls..
+
+UpdateView, igual que create view pero dice Update en
+lugar de create:
+class EstudianteUpdate(UpdateView):
+    model=Estudiante
+    success_url= reverse_lazy("estudiante_listar")
+    fields=["nombre","apellido","email"]
+Este tmb le pega a estudiante_form, el URL esta en urls
+
+DeleteView , bastante simple, lo unico importante es
+que la plantilla a la que le pegue se tiene que llamar
+X_confirm_delete    y tener un boton para confirmar,
+claro.
 
 
 

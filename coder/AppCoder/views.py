@@ -2,6 +2,8 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from .models import *
 from .forms import *
+from django.views.generic import ListView,DetailView,CreateView,UpdateView,DeleteView
+from django.urls import reverse_lazy
 
 def inicio(request):
     return render(request,"AppCoder/inicio.html")
@@ -55,7 +57,8 @@ def profesores(request):
             email=info["email"]
             profe=Profesor(nombre=nombre,apellido=apellido,profesion=profesion,email=email)
             profe.save()
-            return render(request,"AppCoder/inicio.html")
+            profesores=Profesor.objects.all()
+            return render(request, "AppCoder/leerProfesores.html", {"profesores":profesores})
     else:
         form=ProfeForm()
     return render(request,"AppCoder/profesores.html",{"formulario":form})
@@ -74,7 +77,57 @@ def buscar(request):
         return render(request,"AppCoder/busquedaComision.html"),{"mensaje":"ingrese una comision"}
 
 
+def leerProfesores(request):
+    profesores=Profesor.objects.all()
+    return render(request, "AppCoder/leerProfesores.html", {"profesores":profesores})
 
+def eliminarProfesor(request,id):
+    profesor=Profesor.objects.get(id=id)
+    profesor.delete()
+    profesores=Profesor.objects.all()
+    return render(request, "AppCoder/leerProfesores.html", {"profesores":profesores})
+
+def editarProfesor(request,id):
+    profesor=Profesor.objects.get(id=id)
+    if request.method=="POST":
+        form=ProfeForm(request.POST)
+        if form.is_valid():
+            #cambio los datos
+            info=form.cleaned_data
+            profesor.nombre=info["nombre"]
+            profesor.apellido=info["apellido"]
+            profesor.email=info["email"] 
+            profesor.profesion=info["profesion"]
+            profesor.save()
+            profesores=Profesor.objects.all()
+            return render(request, "AppCoder/leerProfesores.html", {"profesores":profesores})
+            
+    else:
+        form=ProfeForm(initial={"nombre":profesor.nombre, "apellido":profesor.apellido, "email":profesor.email,"profesion":profesor.profesion})
+        return render(request, "AppCoder/editarProfesor.html", {"formulario":form,"profesor":profesor})
+
+class EstudianteList(ListView):
+    model=Estudiante
+    template_name="AppCoder/leerEstudiantes.html"
+
+class EstudianteDetalle(DetailView):
+    model=Estudiante
+    template_name="AppCoder/estudiante_detalle.html"
+
+class EstudianteCreacion(CreateView):
+    model=Estudiante
+    success_url= reverse_lazy("estudiante_listar")
+    fields=["nombre","apellido","email"]
+
+class EstudianteUpdate(UpdateView):
+    model=Estudiante
+    success_url= reverse_lazy("estudiante_listar")
+    fields=["nombre","apellido","email"]
+
+class EstudianteDelete(DeleteView):
+    model= Estudiante 
+    success_url: reverse_lazy("estudiante_listar")
+    
 
 
 

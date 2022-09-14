@@ -1,0 +1,16 @@
+{% extends "AppCoder/padre.html" %}
+{% load static %}
+
+{% block titulo %}
+<h1>EDITANDO PROFESOR:{{ profesor }}</h1>
+{% endblock %}
+
+{% block contenido_que_cambia %}
+<form action="{% url 'editarProfesor' profesor.id %}" method="POST"> {% csrf_token %}
+
+    <table>
+        {{ formulario.as_table }}
+    </table>
+    <input type="submit" value="guardar">
+</form>
+{% endblock %}

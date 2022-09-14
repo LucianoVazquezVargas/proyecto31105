@@ -1,0 +1,18 @@
+{% extends "AppCoder/padre.html" %}
+{% load static %}
+
+{% block titulo %}
+<h1>Listado de Estudiantes</h1>
+{% endblock %}
+
+{% block contenido_que_cambia %}
+<h1>BUSQUEDA DE ESTUDIANTES</h1>
+
+<ul>
+  {% for estudiante in object_list %}
+      <li>{{ estudiante }}</li>
+
+      <br>
+      {% endfor %}
+</ul>
+{% endblock %}
