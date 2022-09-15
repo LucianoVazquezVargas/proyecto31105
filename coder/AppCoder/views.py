@@ -4,6 +4,8 @@ from .models import *
 from .forms import *
 from django.views.generic import ListView,DetailView,CreateView,UpdateView,DeleteView
 from django.urls import reverse_lazy
+from django.contrib.auth.forms import AuthenticationForm,UserCreationForm
+from django.contrib.auth import login,logout,authenticate
 
 def inicio(request):
     return render(request,"AppCoder/inicio.html")
@@ -127,7 +129,38 @@ class EstudianteUpdate(UpdateView):
 class EstudianteDelete(DeleteView):
     model= Estudiante 
     success_url: reverse_lazy("estudiante_listar")
-    
 
+#LOGIN LOGOUT REGISTER
+def login_request(request):
+    if request.method=="POST":
+        form=AuthenticationForm(request,data=request.POST)
+        if form.is_valid():
+            usu=request.POST["username"]
+            clave=request.POST["password"]
+            usuario=authenticate(username=usu,password=clave)
+            if usuario is not None:
+                login(request,usuario)
+                return render(request,"AppCoder/inicio.html",{"mensaje":f"Bienvenido {usuario}"})
+            else:
+              return render(request,"ApPCoder/login.html",{"formulario":form,"mensaje":"Usuario o Contraseña incorrectos"})
+
+        else:
+            return render(request,"ApPCoder/login.html",{"formulario":form,"mensaje":"Usuario o Contraseña incorrectos"})
+    else:
+        form=AuthenticationForm()
+        return render(request,"ApPCoder/login.html",{"formulario":form})
+
+def register(request):
+    if request.method=="POST":
+        form=UserRegisterForm(request.POST)
+        if form.is_valid():
+            username=form.cleaned_data.get("username")
+            form.save()
+            return render(request,"AppCoder/inicio.html",{"mensaje":f"Usuario {username} creado correctamente"})
+        else:
+            return render(request,"AppCoder/register.html",{"formulario":form,"mensaje":"Usuario o contraseña no validos"})
+    else:
+        form=UserRegisterForm()
+        return render(request,"AppCoder/register.html",{"formulario":form})
 
 
