@@ -6,7 +6,10 @@ from django.views.generic import ListView,DetailView,CreateView,UpdateView,Delet
 from django.urls import reverse_lazy
 from django.contrib.auth.forms import AuthenticationForm,UserCreationForm
 from django.contrib.auth import login,logout,authenticate
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
 
+@login_required
 def inicio(request):
     return render(request,"AppCoder/inicio.html")
 
@@ -108,7 +111,7 @@ def editarProfesor(request,id):
         form=ProfeForm(initial={"nombre":profesor.nombre, "apellido":profesor.apellido, "email":profesor.email,"profesion":profesor.profesion})
         return render(request, "AppCoder/editarProfesor.html", {"formulario":form,"profesor":profesor})
 
-class EstudianteList(ListView):
+class EstudianteList(LoginRequiredMixin,ListView):
     model=Estudiante
     template_name="AppCoder/leerEstudiantes.html"
 

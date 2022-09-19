@@ -152,7 +152,8 @@ estar en urls
 En el views "editarProfesores" y en la plantilla
 "editarProfesores",hay un ejemplo de como llamar,
 mostrar,editar y guardar algo de la base de datos sin
-tener que usar el admin.
+tener que usar el admin. El ID se pide en la misma
+plantilla, como profe.id en este caso.
 
 CLASES BASADAS EN VISTAS:
 Esto es una forma mas corta de hacer codigo,pero deja
@@ -209,6 +210,79 @@ DeleteView , bastante simple, lo unico importante es
 que la plantilla a la que le pegue se tiene que llamar
 X_confirm_delete    y tener un boton para confirmar,
 claro.
+
+SEGURIDAD Y LOGINS:
+importo en views.py:
+from django.contrib.auth.forms import AuthenticationForm,UserCreationForm
+from django.contrib.auth import login,logout,authenticate
+Y creo los chorizos de codigo que estan en views.
+Importante saber que puedo cambiar el UserCreationForm
+creando una clase que herede de ese codigo en forms.py
+Por lo cual, de base iria UserRegisterForm en la 
+funcion register, pero como cree una clase hija en
+forms,estoy usando UserRegisterForm (nombre de la hija)
+El forms quedaria asi en este caso:
+class UserRegisterForm(UserCreationForm):
+    email = forms.EmailField()
+    password1= forms.CharField(label="Ingrese Contraseña", widget=forms.PasswordInput)
+    password2= forms.CharField(label="Repita Contraseña", widget=forms.PasswordInput)#El widget es para que muestre la password como asteriscos
+    username= forms.CharField(label="Usuario")
+
+    class Meta:#La clase Meta es una clase de configuracion del objeto donde esta metida
+        model= User
+        fields= ['username','email','password1','password2']
+        #saco los textos de ayuda de eso
+        help_texts={k:"" for k in fields}
+Y el views quedaria asi:
+def register(request):
+    if request.method=="POST":
+        form=UserRegisterForm(request.POST)
+        if form.is_valid():
+            username=form.cleaned_data.get("username")
+            form.save()
+            return render(request,"AppCoder/inicio.html",{"mensaje":f"Usuario {username} creado correctamente"})
+        else:
+            return render(request,"AppCoder/register.html",{"formulario":form,"mensaje":"Usuario o contraseña no validos"})
+    else:
+        form=UserRegisterForm()
+        return render(request,"AppCoder/register.html",{"formulario":form})
+
+En cuanto al LOGOUT, es mucho mas simple:
+En urls.py importo esto:
+from django.contrib.auth.views import LogoutView
+y luego solo creo el url asi:
+path("logout/",LogoutView.as_view(template_name="AppCoder/logout.html"),name="logout"),
+
+Por ahora eso es todo DEBERIA PONER MAS COSAS MAS ADELANTE
+
+MIXIN Y DECORADORES:
+Importo estas cosas al views.py:
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required (existen muchas otras formas de usarlo, como admin_required o permission_required)
+
+LoginRequiredMixin: Esto lo añado PRIMERO  
+al () de las clases en views y hace que para poder
+interactuar con esas cosas tengas que estar logueado.
+EJ:
+class EstudianteUpdate(LoginRequiredMixin,UpdateView):
+
+Esto asi solo funciona para las VISTAS BASADAS EN CLASES
+
+Para las VISTAS BASADAS EN FUNCIONES uso Decoradores:
+Un decorador es una especie de funcion, que envuelve
+a otra funcion y le agrega o cambia el comportamiento.
+Para añadir un decorador a una vista basada en funciones,
+tengo que añadir, arriba del def, un @NombreDeDecorador
+
+
+En settings.py, abajo de todo, pongo a donde va a
+llamar para el login:
+LOGIN_URL="/AppCoder/login/"
+
+
+
+
+
 
 
 
