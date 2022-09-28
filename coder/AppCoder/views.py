@@ -11,7 +11,12 @@ from django.contrib.auth.decorators import login_required
 
 @login_required
 def inicio(request):
-    return render(request,"AppCoder/inicio.html")
+    lista=Avatar.objects.filter(user=request.user)
+    if len(lista)!=0:
+        avatar=lista[0].imagen.url
+    else:
+        avatar=""
+    return render(request,"AppCoder/inicio.html", {"avatar":avatar})
 
 def cursos(request):
     return render(request,"AppCoder/cursos.html")
@@ -165,5 +170,40 @@ def register(request):
     else:
         form=UserRegisterForm()
         return render(request,"AppCoder/register.html",{"formulario":form})
+@login_required
+def editarPerfil(request):
+    usuario=request.user
+    if request.method=="POST":
+        form=UserEditForm(request.POST)
+        if form.is_valid():
+            info=form.cleaned_data
+            usuario.email=info["email"]
+            usuario.password1=info["password1"]
+            usuario.password2=info["password2"]
+            usuario.first_name=info["first_name"]
+            usuario.last_name=info["last_name"]
+            usuario.save()
+            return render(request,"AppCoder/inicio.html",{"mensaje":"Perfil editado correctamente"})
+        else:
+            return render(request,"AppCoder/editarPerfil.html",{"formulario":form,"mensaje":"FORMULARIO INVALIDO"})
+    else:
+        form=UserEditForm(instance=usuario)
+    return render(request,"AppCoder/editarPerfil.html",{"formulario":form,"usuario":usuario})
 
+@login_required
 
+def agregarAvatar(request):
+    if request.method=="POST":
+        formulario=AvatarForm(request.POST,request.FILES)
+        if formulario.is_valid:
+            avatarViejo=Avatar.objects.filter(user=request.user)
+            if(len(avatarViejo)>0):
+                avatarViejo[0].delete()
+            avatar = Avatar (user=request.user, imagen=formulario.cleaned_data['imagen']) 
+            avatar.save()
+            return render(request,"AppCoder/inicio.html",{"usuario":request.user,"mensaje":"AVATAR AGREGADO EXITOSAMENTE","imagen":avatar.imagen.url})
+        else:
+            return render(request,"AppCoder/agregarAvatar.html",{"formulario":formulario,"mensaje":"FORMULARIO INVALIDO"})
+    else:
+        formulario=AvatarForm()
+        return render(request,"AppCoder/agregarAvatar.html",{"formulario":formulario,"usuario":request.user})
