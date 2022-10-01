@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from ckeditor.fields import RichTextField
 
 # Create your models here.
 
@@ -10,7 +11,8 @@ class Curso(models.Model):
         return self.nombre+" "+str(self.comision)
 
 class Estudiante(models.Model):
-    nombre=models.CharField(max_length=50)
+   # nombre=models.CharField(max_length=50)
+    nombre=RichTextField(blank=True,null=True)
     apellido=models.CharField(max_length=50)
     email=models.EmailField()
     def __str__(self):
